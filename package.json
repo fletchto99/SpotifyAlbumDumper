@@ -1,0 +1,14 @@
+{
+  "name": "SpotifyAlbumDumper",
+  "version": "1.0.0",
+  "description": "Node.js on Docker",
+  "author": "Matt Langlois <fletchto99@gmail.com>",
+  "main": "index.js",
+  "private": true,
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "spotify-web-api-node": "^5.0.2"
+  }
+}
