@@ -9,6 +9,7 @@ Take a spotify playlist ID and convert it to a list of albums for the tracks in 
 #### Required Parameters
 
 `--playlist <id>` or `-p <id>`- The ID of the playlist you wish to parse
+
 `--output <file>` or `-o <file>`- The location you wish to output the metadata
 
 #### Optional Parameters
