@@ -15,3 +15,5 @@ Take a spotify playlist ID and convert it to a list of albums for the tracks in 
 #### Optional Parameters
 
 `--all-artists` or `-a` - If set, it will find all the albums for all the artists in the playlist, not just the albums for the tracks in the playlist.
+
+`--filter` or `-f` - If set, its a path to a file containing the list of albums that have already been imported (e.g. you want to dump the same album that has had more music added)
