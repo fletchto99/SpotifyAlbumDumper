@@ -6,7 +6,7 @@ const fs = require("fs");
 const { promises } = require("dns");
 
 const {
-  values: { output, playlist, all_artists },
+  values: { output, playlist, all_artists, filter },
 } = util.parseArgs({
   options: {
     output: {
@@ -20,6 +20,10 @@ const {
     all_artists: {
       type: "boolean",
       short: "a",
+    },
+    filter: {
+      type: "string",
+      short: "f",
     },
   },
 });
@@ -43,6 +47,16 @@ if (!output) {
 
 if (!playlist) {
   console.error(`A playlist (-p=<id>) is required!`);
+  error = true;
+}
+
+if (filter && !fs.existsSync(filter)) {
+  console.error(`The filter file (-f=<file>) does not exist!`);
+  error = true;
+}
+
+if (filter && output && filter == output) {
+  console.error(`The filter file (-f=<file>) and output file (-o=<file>) cannot be the same!`);
   error = true;
 }
 
@@ -133,16 +147,18 @@ spotifyApi
       )
       .then((allTracks) => {
         if (!all_artists) {
-          const uniqAlbumsIDs = [
-            ...new Set(
-              allTracks.flatMap((response) => {
-                return response.body.items.map((track) => track.track.album.id);
-              })
-            ),
-          ].sort();
-          fs.writeFileSync(output, uniqAlbumsIDs.join("\n"));
-          console.log(`Done writing ${uniqAlbumsIDs.length} unique album IDs`);
-          process.exit(0);
+          return new Promise((resolve) => {
+            const album_ids = [
+              ...new Set(
+                allTracks.flatMap((response) => {
+                  return response.body.items.map(
+                    (track) => track.track.album.id
+                  );
+                })
+              ),
+            ].sort();
+            resolve(album_ids);
+          });
         } else {
           const uniqArtistIDs = [
             ...new Set(
@@ -158,14 +174,28 @@ spotifyApi
           return resolveAllArtistsAlbums(uniqArtistIDs);
         }
       })
-      .then((allArtistsAlbums) => {
-        const uniqAlbumsIDs = [
-          ...new Set(
-            allArtistsAlbums.flatMap((albums) =>
-              albums.flatMap((album) => album.id)
-            )
-          ),
-        ].sort();
+      .then((uniqAlbumsIDs) => {
+        if (all_artists) {
+          uniqAlbumsIDs = [
+            ...new Set(
+              uniqAlbumsIDs.flatMap((albums) =>
+                albums.flatMap((album) => album.id)
+              )
+            ),
+          ].sort();
+        }
+
+        if (filter) {
+          const albumsToFilter = fs
+            .readFileSync(filter, "utf8")
+            .toString()
+            .split("\n");
+
+          uniqAlbumsIDs = uniqAlbumsIDs.filter(
+            (x) => !albumsToFilter.includes(x)
+          );
+        }
+
         fs.writeFileSync(output, uniqAlbumsIDs.join("\n"));
         console.log(`Done writing ${uniqAlbumsIDs.length} unique album IDs`);
         process.exit(0);
